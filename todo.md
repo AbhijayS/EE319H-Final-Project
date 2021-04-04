@@ -36,6 +36,8 @@
 1. Play to first 3 kills then reset game
 1. Sound driver
 1. Two languages
+    - English
+    - French
 
 ## Advanced Requirements
 - Resolve copyright stuff
