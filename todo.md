@@ -1,6 +1,6 @@
 # Astro Party
 
-## ***Be UBER careful with copyright stuff***
+### ***Be UBER careful with copyright stuff***
 
 ## Coding Style
 
