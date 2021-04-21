@@ -7,7 +7,7 @@
 #define TIMEOUT 5080
 #define LONG_PULSE 4704
 #define SHORT_PULSE 376
-#define PIXEL_CLOCK 10  // 80Mhz / 10 = 8 Mhz
+#define PIXEL_CLOCK 20  // 80Mhz / 10 = 8 Mhz
 #define GROUND() (GPIO_PORTE_DATA_R &= ~0x6) // PE21 = 00
 #define BLACK_SAFE() (GPIO_PORTE_DATA_R = (GPIO_PORTE_DATA_R & ~0x6) | 0x2) // PE21 = 10 (slower but safe)
 #define BLACK_UNSAFE() (GPIO_PORTE_DATA_R = 0x2) // PE21 = 10 (faster but less safe)
@@ -94,8 +94,8 @@ void RCA_init(void) {
 }
 
 void Timer0A_Handler(void) {
-	// record interrupt event only timer a
-	uint32_t event = TIMER0_MIS_R & 0xFF;
+	// record interrupt event
+	uint32_t event = TIMER0_MIS_R;
 
 	// clear all interrupts
 	TIMER0_ICR_R |= event;
@@ -104,22 +104,23 @@ void Timer0A_Handler(void) {
 	if (event & 1) {
 		GROUND();
 		++line;
-		pixel = 0;
 
 		if (line == 241) {
 			DISABLE_TIMER_B();
 		}
-		if (line == VSYNC_LINE) {
-			TIMER0_TAMATCHR_R = SHORT_PULSE;
+		else if (line == VSYNC_LINE) {
+		 	TIMER0_TAMATCHR_R = SHORT_PULSE;
 		}
 	}
 
 	// match event
 	else {
 		BLACK_UNSAFE();
+		pixel = 0;
+		
 		if (line == VSYNC_LINE) {
 			// reset match value
-			TIMER0_TAMATCHR_R = LONG_PULSE;
+		 	TIMER0_TAMATCHR_R = LONG_PULSE;
 		}
 		else if (line == 262) {
 			ENABLE_TIMER_B();
@@ -129,7 +130,12 @@ void Timer0A_Handler(void) {
 }
 
 void Timer0B_Handler(void) {
+	TIMER0_ICR_R |= 1<<8;
+	if (pixel == 10) {
+		WHITE();
+	} else if (pixel == 80) {
+		BLACK_UNSAFE();
+	}
 	++pixel;
-	if (pixel > 100 && pixel < 300) WHITE();
 }
 
