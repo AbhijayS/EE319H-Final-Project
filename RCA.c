@@ -12,6 +12,10 @@
 #define BLACK_SAFE() (GPIO_PORTE_DATA_R = (GPIO_PORTE_DATA_R & ~0x6) | 0x2) // PE21 = 10 (slower but safe)
 #define BLACK_UNSAFE() (GPIO_PORTE_DATA_R = 0x2) // PE21 = 10 (faster but less safe)
 #define WHITE() (GPIO_PORTE_DATA_R |= 0x6) // PE21 = 11
+#define WIDTH 320
+#define HEIGHT 200
+#define FIRST_LINE 20
+#define LAST_LINE (HEIGHT + FIRST_LINE - 1)
 
 #define ENABLE_DISPLAY_TIMER() \
 	TIMER0_TBILR_R = 1200; /* 15us display window offset */ \
@@ -21,6 +25,8 @@
 
 // #define ENABLE_PIXEL_TIMER() (TIMER1_CTL_R |= 1)
 // #define DISABLE_PIXEL_TIMER() (TIMER1_CTL_R &= ~1) /* disable timer */ \
+
+extern void PixelDisplay(void);
 
 static volatile uint16_t line = 0;
 static volatile uint16_t pixel = 0;
@@ -104,21 +110,7 @@ void RCA_init(void) {
 
 }
 
-volatile uint8_t badstuff = 0;
-extern void HardFault_Handler(void);
-volatile uint32_t ta_entry;
-volatile uint32_t ta_exit;
-volatile uint32_t ta_event;
-volatile uint32_t ta_tb_val;
-void Timer0A_Handler(void) {
-	ta_entry = TIMER0_TAV_R;
-	ta_event = TIMER0_MIS_R;
-	ta_tb_val = TIMER0_TBV_R;
-	
-	if (badstuff) {
-		HardFault_Handler();
-	}
-	badstuff = 1;
+void Timer0A_Handler(void) {	
 	uint32_t timera1 = TIMER0_TAV_R;
 	// record interrupt event
 	uint32_t event = TIMER0_MIS_R;
@@ -131,44 +123,36 @@ void Timer0A_Handler(void) {
 		line++;
 		if (line == 263) {
 			line = 1;
-		} else if (line == 200) {
-			DISABLE_DISPLAY_TIMER();
-		} else if (line == VSYNC_LINE) {
+		}
+		else if (line == VSYNC_LINE) {
 		 	TIMER0_TAMATCHR_R = SHORT_PULSE;
 		}
 	}
 	// match event
 	else {
 		BLACK_UNSAFE();
-		if (line == VSYNC_LINE) {
+		if (line>=FIRST_LINE && line<=LAST_LINE) {
+			// 15us
+			while(TIMER0_TAV_R > 0xF27){}
+			// 10mhz 10us
+			PixelDisplay();
+			// turn off
+			BLACK_UNSAFE();
+			uint32_t timera2 = TIMER0_TAV_R;
+			__asm__("NOP");
+		}
+		else if (line == VSYNC_LINE) {
 		 	TIMER0_TAMATCHR_R = LONG_PULSE;
-		} else if (line == 262) {
-			ENABLE_DISPLAY_TIMER();			
-			//uint32_t timera2 = TIMER0_TAV_R;
-			//__asm__("NOP");
 		}
 	}
-	badstuff = 0;
-	ta_exit = TIMER0_TAV_R;
 }
 
 
-extern void PixelDisplay(void);
-volatile uint32_t tb_entry;
-volatile uint32_t tb_exit;
-volatile uint32_t tb_event;
-volatile uint32_t tb_ta_val;
+
 // Display Timer
 // one worry: match interrupt routine takes longer than expected and corrupts next timeout interrupt
 // tuning params: reduce display time (match_reg), #pixels, display window offset (initial load value), first pixel start delay
 void Timer0B_Handler(void) {
-	tb_entry = TIMER0_TBV_R;
-	tb_event = TIMER0_MIS_R;
-	tb_ta_val = TIMER0_TAV_R;
-	if (badstuff) {
-		HardFault_Handler();
-	}
-	badstuff = 1;
 	uint32_t eventb = TIMER0_MIS_R;
 
 	// clear interrupt event
@@ -186,6 +170,4 @@ void Timer0B_Handler(void) {
 	else {
 		BLACK_UNSAFE();
 	}
-	badstuff = 0;
-	tb_exit = TIMER0_TBV_R;
 }
