@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include "RCA.h"
 #include "../inc/tm4c123gh6pm.h"
+#include "Sprites.h"
 
 #define LINES 262
 #define VSYNC_LINE 248
@@ -12,8 +13,6 @@
 #define BLACK_SAFE() (GPIO_PORTE_DATA_R = (GPIO_PORTE_DATA_R & ~0x6) | 0x2) // PE21 = 10 (slower but safe)
 #define BLACK_UNSAFE() (GPIO_PORTE_DATA_R = 0x2) // PE21 = 10 (faster but less safe)
 #define WHITE() (GPIO_PORTE_DATA_R |= 0x6) // PE21 = 11
-#define WIDTH 320
-#define HEIGHT 200
 #define FIRST_LINE 20
 #define LAST_LINE (HEIGHT + FIRST_LINE - 1)
 
@@ -26,13 +25,12 @@
 // #define ENABLE_PIXEL_TIMER() (TIMER1_CTL_R |= 1)
 // #define DISABLE_PIXEL_TIMER() (TIMER1_CTL_R &= ~1) /* disable timer */ \
 
-extern void PixelDisplay(void);
+extern void PixelDisplay(const uint8_t* row);
 
 static volatile uint16_t line = 0;
 static volatile uint16_t pixel = 0;
 
 void RCA_init(void) {
-	// RCA output on PE0
 	SYSCTL_RCGCGPIO_R |= 1<<4; // provide clock on port e
 	// wait a few
 	__asm__{
@@ -110,7 +108,7 @@ void RCA_init(void) {
 
 }
 
-void Timer0A_Handler(void) {	
+void Timer0A_Handler(void) {
 	uint32_t timera1 = TIMER0_TAV_R;
 	// record interrupt event
 	uint32_t event = TIMER0_MIS_R;
@@ -135,7 +133,7 @@ void Timer0A_Handler(void) {
 			// 15us
 			while(TIMER0_TAV_R > 0xF27){}
 			// 10mhz 10us
-			PixelDisplay();
+			PixelDisplay( MAP[line-FIRST_LINE] );
 			// turn off
 			BLACK_UNSAFE();
 			uint32_t timera2 = TIMER0_TAV_R;
@@ -147,27 +145,3 @@ void Timer0A_Handler(void) {
 	}
 }
 
-
-
-// Display Timer
-// one worry: match interrupt routine takes longer than expected and corrupts next timeout interrupt
-// tuning params: reduce display time (match_reg), #pixels, display window offset (initial load value), first pixel start delay
-void Timer0B_Handler(void) {
-	uint32_t eventb = TIMER0_MIS_R;
-
-	// clear interrupt event
-	TIMER0_ICR_R |= eventb;
-	
-	// start
-	if (eventb & 0x100) {
-		// reset period
-		TIMER0_TBILR_R = TIMEOUT-1;
-		// 10mhz code
-		PixelDisplay();
-		BLACK_UNSAFE();
-	}
-	// end
-	else {
-		BLACK_UNSAFE();
-	}
-}
