@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include "RCA.h"
 #include "../inc/tm4c123gh6pm.h"
-#include "Sprites.h"
+#include "Images.h"
 
 #define LINES 262
 #define VSYNC_LINE 248
@@ -29,6 +29,8 @@ extern void PixelDisplay(const uint8_t* row);
 
 static volatile uint16_t line = 0;
 static volatile uint16_t pixel = 0;
+
+volatile uint8_t rca_busy_flag = 1;
 
 void RCA_init(void) {
 	SYSCTL_RCGCGPIO_R |= 1<<4; // provide clock on port e
@@ -105,7 +107,7 @@ void RCA_init(void) {
 	//TIMER0_IMR_R |= 1<<11; // enable match interrupts
 	
 	TIMER0_CTL_R |= 1; // enable timer a
-
+	
 }
 
 void Timer0A_Handler(void) {
@@ -121,9 +123,12 @@ void Timer0A_Handler(void) {
 		line++;
 		if (line == 263) {
 			line = 1;
+			rca_busy_flag = 1;
 		}
 		else if (line == VSYNC_LINE) {
 		 	TIMER0_TAMATCHR_R = SHORT_PULSE;
+		} else if (line == LAST_LINE+1) {
+			rca_busy_flag = 0;
 		}
 	}
 	// match event

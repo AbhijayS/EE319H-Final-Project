@@ -13,17 +13,17 @@
     - Right button - shooting
 
 ## Basic Requirements
-1. Video driver
-1. Display 1 sprite
-    - make bitmap
-    - display bitmap on screen
-1. Refresh scheme
-    - interrupts?
-    - loop?
-    - how is this implemented on other embedded systems like old arcade games?
-1. Simulate sprite movement
-    - starting location
-    - straight line motion
+1. ~~Video driver~~
+1. ~~Display 1 sprite~~
+    - ~~make bitmap~~
+    - ~~display bitmap on screen~~
+1. ~~Refresh scheme~~
+    - ~~interrupts?~~
+    - ~~loop?~~
+    - ~~how is this implemented on other embedded systems like old arcade games?~~
+1. ~~Simulate sprite movement~~
+    - ~~starting location~~
+    - ~~straight line motion~~
 1. 1 button input interrupts
 1. Connect turning physics with button input
 1. Design base map
