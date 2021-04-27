@@ -36,6 +36,8 @@
 /* I know it's weird. Don't ask me why. */
 #define WHITE ((uint8_t)0xC0)
 #define BLACK ((uint8_t)0x40)
+#define PIXEL_MASK ((uint8_t)0xC0)
+#define COMPRESSION 4
 
 /*
 each location is actually 4 pixels
@@ -59,9 +61,9 @@ doesn't check for out of bounds or invalid colors
 can be more efficient
 */
 void writePixel(uint8_t color, uint16_t x, uint16_t y) {
-  uint16_t col = x/4;
-  uint16_t pix = x%4;
-  MAP[y][col] &= ~(0xC0 >> (pix*2)); // clear pixel
+  uint16_t col = x/COMPRESSION;
+  uint16_t pix = x%COMPRESSION;
+  MAP[y][col] &= ~(PIXEL_MASK >> (pix*2)); // clear pixel
   MAP[y][col] |= (color >> (pix*2)); // set pixel
 }
 
@@ -69,9 +71,8 @@ void writePixel(uint8_t color, uint16_t x, uint16_t y) {
 // doesnt check for corrupt pixel color
 // can be made more efficient
 void write4Pixels(uint8_t pixels, uint16_t x, uint16_t y) {
-  uint8_t mask = 0xC0;
   for (int i = 0; i < 4; i++) {
-    writePixel( (pixels << (i*2)) & mask, x+i, y);
+    writePixel( (pixels << (i*2)) & PIXEL_MASK, x+i, y);
   }
 }
 
@@ -91,25 +92,23 @@ main(void)
     Sprite shipA = create_ship_sprite(100, 100, 0);
 		
 		uint32_t frames = 0;
+		uint16_t angle = 0;
 
     while(1)
     {
-			if (!rca_busy_flag && shipA.y > 10) {
+			if (!rca_busy_flag) {
+        uint8_t sprite_buf[SPRITE_HEIGHT][SPRITE_WIDTH_COMPRESSED];
+        clear_sprite_buffer(sprite_buf);
+        rotate_pixel_buffer(shipA.base_image, sprite_buf, 27, 8, 7, 8);
 
         for (int i = 0; i < SPRITE_HEIGHT; i++) {
-          for (int j = 0; j < SPRITE_WIDTH; j++) {
-            write4Pixels(shipA.base_image[i][j], shipA.x + (j*4), shipA.y + i);
+          for (int j = 0; j < SPRITE_WIDTH_COMPRESSED; j++) {
+            write4Pixels(sprite_buf[i][j], shipA.x + (j*4), shipA.y + i);
           }
         }
-				
-				if (frames % 60 == 0) {
-					shipA.y--;
-				}
-				
 				frames++;
-				
+				angle += 1;
 				rca_busy_flag = 1;
-				
 			}
     }
   }
