@@ -133,10 +133,11 @@ main(void)
 		gamepad_init();		
 
     Sprite shipA = create_ship_sprite(100, 100, 0);
+	uint8_t frame = 0;
 
     while(1)
     {
-			if (!rca_busy_flag) {
+			if (!rca_busy_flag && frame) {
         if (PLAYER_A_TURN) shipA.angle -= 5;
 
         int speed = 0;
@@ -165,6 +166,7 @@ main(void)
 
 				rca_busy_flag = 1;
 			}
+		frame = (frame+1)&1;
     }
   }
 
