@@ -26,9 +26,9 @@ const uint8_t SHIP_SPRITE[SPRITE_HEIGHT][SPRITE_WIDTH_COMPRESSED] =
 };
 
 Sprite create_ship_sprite(
-    uint8_t start_x,
-    uint8_t start_y,
-    uint8_t start_angle) {
+    uint16_t start_x,
+    uint16_t start_y,
+    int16_t start_angle) {
     return (Sprite) {
         .x = start_x,
         .y = start_y,

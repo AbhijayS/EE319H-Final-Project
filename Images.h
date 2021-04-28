@@ -10,7 +10,8 @@
 /* Map */
 #define WIDTH 320
 #define HEIGHT 200
-extern uint8_t MAP[][WIDTH/4];
+#define COMPRESSION 4
+extern uint8_t MAP[][WIDTH/COMPRESSION];
 
 
 /*
