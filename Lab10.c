@@ -19,8 +19,8 @@
 
 #include <stdint.h>
 #include <math.h>
-#include "../inc/tm4c123gh6pm.h"
-#include "../inc/CortexM.h"
+#include "inc/tm4c123gh6pm.h"
+#include "inc/CortexM.h"
 #include "TExaS.h"
 #include "Sprite.h"
 #include "RCA.h"

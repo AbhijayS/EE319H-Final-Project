@@ -72,4 +72,4 @@ RTE
 TExaS.h
 TExaS.c
 startup.s
-
+inc/

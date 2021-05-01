@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include "RCA.h"
-#include "../inc/tm4c123gh6pm.h"
+#include "inc/tm4c123gh6pm.h"
 #include "Images.h"
 
 #define LINES 262
