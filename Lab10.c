@@ -1,5 +1,5 @@
 /*
-  File: main.c
+  File: Lab10.c
   Author: Abhijay Saini
   Lab 10 Final Project
  */
@@ -133,16 +133,15 @@ main(void)
 		gamepad_init();		
 
     Sprite shipA = create_ship_sprite(100, 100, 0);
-	uint8_t frame = 0;
 
     while(1)
     {
-			if (!rca_busy_flag && frame) {
+			if (!rca_busy_flag) {
         if (PLAYER_A_TURN) shipA.angle -= 5;
 
-        int speed = 0;
+        int speed = 1;
         int mx = (int)roundf(speed*cosf(RADIANS(shipA.angle+90)));
-        int my = (int)roundf(speed*sinf(RADIANS(shipA.angle+90)));
+        int my = -1*(int)roundf(speed*sinf(RADIANS(shipA.angle+90)));
 
         if (mx > 0 && collision(&shipA, right, 1)) mx = 0;
         else if (mx < 0 && collision(&shipA, left, 1)) mx = 0;
@@ -155,7 +154,7 @@ main(void)
 				
 				uint8_t sprite_buf[SPRITE_HEIGHT][SPRITE_WIDTH_COMPRESSED];
         clear_sprite_buffer(sprite_buf);
-        rotate_pixel_buffer(shipA.base_image, sprite_buf, shipA.angle, 8, 7, 8);
+        rotate_pixel_buffer(shipA.base_image, sprite_buf, shipA.angle, 8, 7, 7);
 
         /* display ship on map */
         for (int i = 0; i < SPRITE_HEIGHT; i++) {
@@ -166,7 +165,6 @@ main(void)
 
 				rca_busy_flag = 1;
 			}
-		frame = (frame+1)&1;
     }
   }
 

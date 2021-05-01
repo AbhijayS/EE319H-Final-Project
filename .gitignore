@@ -53,3 +53,23 @@ dkms.conf
 
 # VSCode files
 *.code-workspace
+
+# keil files
+*.crf
+*.dep
+*.scvd
+*.iex
+*.axf
+*.htm
+*.lnp
+*.lst
+*.uvguix.*
+*.uvoptx
+*.uvprojx
+RTE
+
+# licensed files
+TExaS.h
+TExaS.c
+startup.s
+
