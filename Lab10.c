@@ -133,37 +133,41 @@ main(void)
 		gamepad_init();		
 
     Sprite shipA = create_ship_sprite(100, 100, 0);
+    uint32_t frame = 0;
 
     while(1)
     {
-			if (!rca_busy_flag) {
-        if (PLAYER_A_TURN) shipA.angle -= 5;
+			if ( !rca_busy_flag ) {
+        if (frame%2==0) {
+          if (PLAYER_A_TURN) shipA.angle -= 5;
 
-        int speed = 1;
-        int mx = (int)roundf(speed*cosf(RADIANS(shipA.angle+90)));
-        int my = -1*(int)roundf(speed*sinf(RADIANS(shipA.angle+90)));
+          int speed = 1;
+          int mx = (int)roundf(speed*cosf(RADIANS(shipA.angle+90)));
+          int my = -1*(int)roundf(speed*sinf(RADIANS(shipA.angle+90)));
 
-        if (mx > 0 && collision(&shipA, right, 1)) mx = 0;
-        else if (mx < 0 && collision(&shipA, left, 1)) mx = 0;
+          if (mx > 0 && collision(&shipA, right, 1)) mx = 0;
+          else if (mx < 0 && collision(&shipA, left, 1)) mx = 0;
 
-        if (my > 0 && collision(&shipA, down, 1)) my = 0;
-        else if (my < 0 && collision(&shipA, up, 1)) my = 0;
+          if (my > 0 && collision(&shipA, down, 1)) my = 0;
+          else if (my < 0 && collision(&shipA, up, 1)) my = 0;
 
-        shipA.x += mx;
-        shipA.y += my;
-				
-				uint8_t sprite_buf[SPRITE_HEIGHT][SPRITE_WIDTH_COMPRESSED];
-        clear_sprite_buffer(sprite_buf);
-        rotate_pixel_buffer(shipA.base_image, sprite_buf, shipA.angle, 8, 7, 7);
+          shipA.x += mx;
+          shipA.y += my;
+          
+          uint8_t sprite_buf[SPRITE_HEIGHT][SPRITE_WIDTH_COMPRESSED];
+          clear_sprite_buffer(sprite_buf);
+          rotate_pixel_buffer(shipA.base_image, sprite_buf, shipA.angle, 8, 7, 7);
 
-        /* display ship on map */
-        for (int i = 0; i < SPRITE_HEIGHT; i++) {
-          for (int j = 0; j < SPRITE_WIDTH_COMPRESSED; j++) {
-            write_4_pixels_to_map(sprite_buf[i][j], shipA.x + (j*4), shipA.y + i);
+          /* display ship on map */
+          for (int i = 0; i < SPRITE_HEIGHT; i++) {
+            for (int j = 0; j < SPRITE_WIDTH_COMPRESSED; j++) {
+              write_4_pixels_to_map(sprite_buf[i][j], shipA.x + (j*4), shipA.y + i);
+            }
           }
-        }
 
-				rca_busy_flag = 1;
+        }
+        frame++;
+        rca_busy_flag = 1;
 			}
     }
   }
