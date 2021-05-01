@@ -24,8 +24,8 @@
 1. ~~Simulate sprite movement~~
     - ~~starting location~~
     - ~~straight line motion~~
-1. 1 button input interrupts
-1. Connect turning physics with button input
+1. ~~1 button input interrupts~~
+1. ~~Connect turning physics with button input~~
 1. Design base map
     - sprites should obey the boundaries of the map
     - set sprite starting location on base map

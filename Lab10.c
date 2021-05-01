@@ -39,7 +39,7 @@
 #define WHITE ((uint8_t)0xC0)
 #define BLACK ((uint8_t)0x40)
 #define PIXEL_MASK ((uint8_t)0xC0)
-#define RADIANS(x) ( (x)*3.14f/180 )
+#define RADIANS(x) ( (x)*0.01745329251f )
 
 /*
 each location is actually 4 pixels
@@ -139,17 +139,25 @@ main(void)
     {
 			if ( !rca_busy_flag ) {
         if (frame%2==0) {
+
+          /* remove old ship from map */
+          for (int i = 0; i < SPRITE_HEIGHT; i++) {
+            for (int j = 0; j < SPRITE_WIDTH; j++) {
+              write_pixel_to_map(BLACK, shipA.x + j, shipA.y + i);
+            }
+          }
+
           if (PLAYER_A_TURN) shipA.angle -= 5;
 
-          int speed = 1;
+          int speed = 2;
           int mx = (int)roundf(speed*cosf(RADIANS(shipA.angle+90)));
           int my = -1*(int)roundf(speed*sinf(RADIANS(shipA.angle+90)));
 
-          if (mx > 0 && collision(&shipA, right, 1)) mx = 0;
-          else if (mx < 0 && collision(&shipA, left, 1)) mx = 0;
+          if (mx > 0 && collision(&shipA, right, speed)) mx = 0;
+          else if (mx < 0 && collision(&shipA, left, speed)) mx = 0;
 
-          if (my > 0 && collision(&shipA, down, 1)) my = 0;
-          else if (my < 0 && collision(&shipA, up, 1)) my = 0;
+          if (my > 0 && collision(&shipA, down, speed)) my = 0;
+          else if (my < 0 && collision(&shipA, up, speed)) my = 0;
 
           shipA.x += mx;
           shipA.y += my;
