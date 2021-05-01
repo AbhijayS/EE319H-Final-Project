@@ -26,9 +26,9 @@
     - ~~straight line motion~~
 1. ~~1 button input interrupts~~
 1. ~~Connect turning physics with button input~~
-1. Design base map
-    - sprites should obey the boundaries of the map
-    - set sprite starting location on base map
+1. ~~Design base map~~
+    - ~~sprites should obey the boundaries of the map~~
+    - ~~set sprite starting location on base map~~
 1. Add second sprite and all 4 buttons
 1. Add shooting
 1. Keep track of game score
