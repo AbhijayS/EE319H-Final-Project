@@ -1,4 +1,13 @@
-arr = [
+#include <stdint.h>
+
+#define NEW_PISKEL_FRAME_COUNT 1
+#define NEW_PISKEL_FRAME_WIDTH 16
+#define NEW_PISKEL_FRAME_HEIGHT 16
+
+/* Piskel data for "New Piskel" */
+
+static const uint32_t new_piskel_data[1][256] = {
+{
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
@@ -15,14 +24,5 @@ arr = [
 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-]
-
-H = 16
-W = 16
-i = 0
-j = 0
-while i < W*H:
-    print("{}, ".format(hex(int(''+ ('11' if arr[i]==1 else '01') + ('11' if arr[i+1]==1 else '01') + ('11' if arr[i+2]==1 else '01') + ('11' if arr[i+3]==1 else '01'), 2))).upper(), end="")
-    i = i+4
-    if i%W == 0:
-        print("")
+}
+};

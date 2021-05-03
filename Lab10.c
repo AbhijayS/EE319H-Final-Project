@@ -40,6 +40,10 @@
 #define BLACK ((uint8_t)0x40)
 #define PIXEL_MASK ((uint8_t)0xC0)
 #define RADIANS(x) ( (x)*0.01745329251f )
+#define DIVISOR 2 // divides the frame rate for slower speed
+#define SHIP_SPEED 2
+#define BULLET_SPEED 4
+#define SHIP_TURN_SPEED 8 // degrees
 
 /*
 each location is actually 4 pixels
@@ -72,6 +76,7 @@ void write_pixel_to_map(uint8_t color, uint16_t x, uint16_t y) {
 // doesn't check for out of bounds
 // doesnt check for corrupt pixel color
 // can be made more efficient
+// DEPRECATED
 void write_4_pixels_to_map(uint8_t pixels, uint16_t x, uint16_t y) {
   for (int i = 0; i < 4; i++) {
     write_pixel_to_map( (pixels << (i*2)) & PIXEL_MASK, x+i, y);
@@ -125,61 +130,67 @@ uint8_t collision(Sprite *sprite, direction dir, uint8_t speed) {
 
 int
 main(void)
+{
+  DisableInterrupts();
+  PLL_Init();
+  RCA_init();
+  EnableInterrupts(); // enable all interrupts
+  gamepad_init();		
+
+  Sprite shipA = (Sprite) {
+    .x = 75,
+    .y = 160,
+    .angle = 0,
+    .base_image = SHIP_SPRITE
+  };
+  
+  // Sprite shipB = create_ship_sprite(240, 40, 180);
+  uint8_t frame_count = 0; // counts the number of frames displayed
+
+  while(1)
   {
-    DisableInterrupts();
-    PLL_Init();
-    RCA_init();
-    EnableInterrupts(); // enable all interrupts
-		gamepad_init();		
+    if (rca_busy_flag) continue; // still displaying content
 
-    Sprite shipA = create_ship_sprite(75, 160, 0);
-		// Sprite shipB = create_ship_sprite(240, 40, 180);
-    uint32_t frame = 0;
+    rca_busy_flag = 1;
+    frame_count++;
 
-    while(1)
-    {
-			if ( !rca_busy_flag ) {
-        if (frame%2==0) {
+    if ( frame_count % DIVISOR != 0 ) continue; // slow down the frate rate
 
-          /* remove old ship from map */
-          for (int i = 0; i < SPRITE_HEIGHT; i++) {
-            for (int j = 0; j < SPRITE_WIDTH; j++) {
-              write_pixel_to_map(BLACK, shipA.x + j, shipA.y + i);
-            }
-          }
+    /* remove old ship from map */
+    for (int i = 0; i < SPRITE_HEIGHT; i++) {
+      for (int j = 0; j < SPRITE_WIDTH; j++) {
+        write_pixel_to_map(BLACK, shipA.x + j, shipA.y + i);
+      }
+    }
 
-          if (PLAYER_A_TURN) shipA.angle -= 5;
+    if (PLAYER_A_TURN) {
+			shipA.angle = (shipA.angle - SHIP_TURN_SPEED) % 360;
+		}
 
-          int speed = 2;
-          int mx = (int)roundf(speed*cosf(RADIANS(shipA.angle+90)));
-          int my = -1*(int)roundf(speed*sinf(RADIANS(shipA.angle+90)));
+    int mx = (int)roundf(SHIP_SPEED*cosf(RADIANS(shipA.angle+90)));
+    int my = -1*(int)roundf(SHIP_SPEED*sinf(RADIANS(shipA.angle+90)));
 
-          if (mx > 0 && collision(&shipA, right, speed)) mx = 0;
-          else if (mx < 0 && collision(&shipA, left, speed)) mx = 0;
+    if (mx > 0 && collision(&shipA, right, SHIP_SPEED)) mx = 0;
+    else if (mx < 0 && collision(&shipA, left, SHIP_SPEED)) mx = 0;
 
-          if (my > 0 && collision(&shipA, down, speed)) my = 0;
-          else if (my < 0 && collision(&shipA, up, speed)) my = 0;
+    if (my > 0 && collision(&shipA, down, SHIP_SPEED)) my = 0;
+    else if (my < 0 && collision(&shipA, up, SHIP_SPEED)) my = 0;
 
-          shipA.x += mx;
-          shipA.y += my;
-          
-          uint8_t sprite_buf[SPRITE_HEIGHT][SPRITE_WIDTH_COMPRESSED];
-          clear_sprite_buffer(sprite_buf);
-          rotate_pixel_buffer(shipA.base_image, sprite_buf, shipA.angle, 8, 7, 7);
+    shipA.x += mx;
+    shipA.y += my;
+    
+    uint8_t sprite_buf[SPRITE_HEIGHT][SPRITE_WIDTH_COMPRESSED];
+    clear_sprite_buffer(sprite_buf);
+    rotate_pixel_buffer(shipA.base_image, sprite_buf, shipA.angle, 8, 7, 7);
 
-          /* display ship on map */
-          for (int i = 0; i < SPRITE_HEIGHT; i++) {
-            for (int j = 0; j < SPRITE_WIDTH_COMPRESSED; j++) {
-              write_4_pixels_to_map(sprite_buf[i][j], shipA.x + (j*4), shipA.y + i);
-            }
-          }
-
-        }
-        frame++;
-        rca_busy_flag = 1;
-			}
+    /* display ship on map */
+    for (int i = 0; i < SPRITE_HEIGHT; i++) {
+      for (int j = 0; j < SPRITE_WIDTH_COMPRESSED; j++) {
+        write_4_pixels_to_map(sprite_buf[i][j], shipA.x + (j*4), shipA.y + i);
+      }
     }
   }
+}
 
 
 
