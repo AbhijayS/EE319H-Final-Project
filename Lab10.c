@@ -238,6 +238,16 @@ main(void)
     .angle = 180,
     .base_image = SHIPB_SPRITE
   };
+
+  Bullet bulletB = (Bullet){
+    .x = 80,
+    .y = 20,
+    .height = 2,
+    .width = 2,
+    .active = 0,
+    .dx = 0,
+    .dy = 0
+  };
   
   uint8_t frame_count = 0; // counts the number of frames displayed
 
@@ -263,6 +273,15 @@ main(void)
       bulletA.active = 1;
     }
 
+    if (player_b_fire_state==pressing && !bulletB.active) {
+      bulletB.x = shipB.x + 8 + (int)roundf(6*cosf(RADIANS(shipB.angle+90)));
+      bulletB.y = shipB.y + 7 + -1*(int)roundf(6*sinf(RADIANS(shipB.angle+90)));
+      bulletB.dx = (int)roundf(BULLET_SPEED*cosf(RADIANS(shipB.angle+90)));
+      bulletB.dy = -1*(int)roundf(BULLET_SPEED*sinf(RADIANS(shipB.angle+90)));
+      bulletB.active = 1;
+    }
+
+    /* bulletA stuff */
     if (bulletA.active) {
       /* erase bullet from map */
       for (int i = 0; i < bulletA.height; i++) {
@@ -293,6 +312,42 @@ main(void)
         for (int i = 0; i < bulletA.height; i++) {
           for (int j = 0; j < bulletA.width; j++) {
             write_pixel_to_map(WHITE, bulletA.x+j, bulletA.y+i);
+          }
+        }
+      }
+    }
+
+    /* bulletB stuff */
+    if (bulletB.active) {
+      /* erase bullet from map */
+      for (int i = 0; i < bulletB.height; i++) {
+        for (int j = 0; j < bulletB.width; j++) {
+          write_pixel_to_map(BLACK, bulletB.x+j, bulletB.y+i);
+        }
+      }
+
+      // increment bullet
+      bulletB.x+=bulletB.dx;
+      bulletB.y+=bulletB.dy;
+
+      // collision
+      if (bullet_collision(&bulletB)) {
+        if (overlap(bulletB.x-1, bulletB.x+bulletB.width,
+                    bulletB.y-1, bulletB.y+bulletB.height,
+                    shipA.x, shipA.x+SPRITE_WIDTH-1,
+                    shipA.y, shipA.y+SPRITE_HEIGHT))
+                    {
+                      player_b_score++;
+                    }
+        bulletB.active = 0;
+      }
+      
+      // no collision
+      else {
+        /* redraw bullet */
+        for (int i = 0; i < bulletB.height; i++) {
+          for (int j = 0; j < bulletB.width; j++) {
+            write_pixel_to_map(WHITE, bulletB.x+j, bulletB.y+i);
           }
         }
       }
