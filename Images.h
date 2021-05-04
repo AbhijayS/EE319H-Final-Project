@@ -13,6 +13,11 @@
 #define COMPRESSION 4
 extern uint8_t MAP[][WIDTH/COMPRESSION];
 
+#define BULLET_HEIGHT 4
+#define BULLET_WIDTH 4
+#define BULLET_WIDTH_COMPRESSED 1
+const uint8_t BULLET[][BULLET_WIDTH_COMPRESSED];
+
 
 /*
 static const uint8_t MAP[][25] = {
