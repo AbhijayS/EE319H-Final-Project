@@ -80,8 +80,8 @@ void rotate_pixel_buffer(
             if ( distance <= radius ) {
                 float original_angle = atan2f(center_y-i, j-center_x);
                 float new_angle = original_angle + RADIANS(degrees);
-                int new_x = floorf(distance*cosf(new_angle));
-                int new_y = floorf(distance*sinf(new_angle));
+                int new_x = roundf(distance*cosf(new_angle));
+                int new_y = roundf(distance*sinf(new_angle));
                 write_pixel_to_sprite_buffer(buffer, WHITE, center_x+new_x, center_y-new_y);
             }
         }

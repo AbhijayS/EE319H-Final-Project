@@ -42,8 +42,18 @@
 #define RADIANS(x) ( (x)*0.01745329251f )
 #define DIVISOR 2 // divides the frame rate for slower speed
 #define SHIP_SPEED 2
-#define BULLET_SPEED 4
-#define SHIP_TURN_SPEED 8 // degrees
+#define BULLET_SPEED 3
+#define SHIP_TURN_SPEED 10 // degrees
+
+typedef struct bullet_t {
+    uint16_t x;
+    uint16_t y;
+    const uint8_t width;
+    const uint8_t height;
+    uint8_t active;
+    int8_t dx;
+    int8_t dy;
+} Bullet;
 
 /*
 each location is actually 4 pixels
@@ -128,9 +138,62 @@ uint8_t collision(Sprite *sprite, direction dir, uint8_t speed) {
   return 0;
 }
 
+// uint8_t collision_bullet(Bullet *bullet, direction dir) {
+//   switch (dir)
+//   {
+//   case up:
+//     for (int i = 0; i < bullet->width; i++) {
+//       if (read_pixel_from_map(bullet->x+i, bullet->y-1)==WHITE) return 1;
+//     }
+//     return 0;
+
+//   case down:
+//     for (int i = 0; i < bullet->width; i++) {
+//       if (read_pixel_from_map(bullet->x+i, bullet->y+bullet->height)==WHITE) return 1;
+//     }
+//     return 0;
+
+//   case left:
+//     for (int i = 0; i < bullet->height; i++) {
+//       if (read_pixel_from_map(bullet->x-1, bullet->y+i)==WHITE) return 1;
+//     }
+//     return 0;
+  
+//   case right:
+//     for (int i = 0; i < bullet->height; i++) {
+//       if (read_pixel_from_map(bullet->x+bullet->width, bullet->y+i)==WHITE) return 1;
+//     }
+//     return 0;
+    
+//   default:
+//     return 0;
+//   }
+// }
+
+int bullet_collision(Bullet *bullet) {
+  for (int i = -1; i < bullet->height+1; i++) {
+    for (int j = -1; j < bullet->width+1; j++) {
+      if (read_pixel_from_map(bullet->x+j, bullet->y+i)==WHITE) {
+        return 1;
+      }
+    }
+  }
+  return 0;
+}
+
+int overlap(int x1, int x2, int y1, int y2, int x3, int x4, int y3, int y4) {
+  if (x1 <= x4 &&
+      x2 >= x3 && 
+      y1 <= y4 &&
+      y2 >= y3) return 1;
+  return 0;
+}
+
 uint32_t start;
 uint32_t stop;
 uint32_t delay;
+
+
 
 int
 main(void)
@@ -159,6 +222,16 @@ main(void)
     .base_image = SHIP_SPRITE
   };
 
+  Bullet bulletA = (Bullet){
+    .x = 80,
+    .y = 20,
+    .height = 2,
+    .width = 2,
+    .active = 0,
+    .dx = 0,
+    .dy = 0
+  };
+
   Sprite shipB = (Sprite) {
     .x = 240,
     .y = 40,
@@ -167,6 +240,9 @@ main(void)
   };
   
   uint8_t frame_count = 0; // counts the number of frames displayed
+
+  int player_a_score = 0;
+  int player_b_score = 0;
 
   while(1)
   {
@@ -177,9 +253,55 @@ main(void)
 
     start = STCURRENT;
 
+    gamepad_update();
+
+    if (player_a_fire_state==pressing && !bulletA.active) {
+      bulletA.x = shipA.x + 8 + (int)roundf(6*cosf(RADIANS(shipA.angle+90)));
+      bulletA.y = shipA.y + 7 + -1*(int)roundf(6*sinf(RADIANS(shipA.angle+90)));
+      bulletA.dx = (int)roundf(BULLET_SPEED*cosf(RADIANS(shipA.angle+90)));
+      bulletA.dy = -1*(int)roundf(BULLET_SPEED*sinf(RADIANS(shipA.angle+90)));
+      bulletA.active = 1;
+    }
+
+    if (bulletA.active) {
+      /* erase bullet from map */
+      for (int i = 0; i < bulletA.height; i++) {
+        for (int j = 0; j < bulletA.width; j++) {
+          write_pixel_to_map(BLACK, bulletA.x+j, bulletA.y+i);
+        }
+      }
+
+      // increment bullet
+      bulletA.x+=bulletA.dx;
+      bulletA.y+=bulletA.dy;
+
+      // collision
+      if (bullet_collision(&bulletA)) {
+        if (overlap(bulletA.x-1, bulletA.x+bulletA.width,
+                    bulletA.y-1, bulletA.y+bulletA.height,
+                    shipB.x, shipB.x+SPRITE_WIDTH-1,
+                    shipB.y, shipB.y+SPRITE_HEIGHT))
+                    {
+                      player_a_score++;
+                    }
+        bulletA.active = 0;
+      }
+      
+      // no collision
+      else {
+        /* redraw bullet */
+        for (int i = 0; i < bulletA.height; i++) {
+          for (int j = 0; j < bulletA.width; j++) {
+            write_pixel_to_map(WHITE, bulletA.x+j, bulletA.y+i);
+          }
+        }
+      }
+    }
+
     /* player A */
     if (frame_count == 0)
     {
+
       /* remove old ship from map */
       for (int i = 0; i < SPRITE_HEIGHT; i++) {
         for (int j = 0; j < SPRITE_WIDTH; j++) {
@@ -225,7 +347,7 @@ main(void)
         }
       }
 
-      if (PLAYER_A_FIRE) {
+      if (PLAYER_B_TURN) {
         shipB.angle = (shipB.angle - SHIP_TURN_SPEED) % 360;
       }
 
