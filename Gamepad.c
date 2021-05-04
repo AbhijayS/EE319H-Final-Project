@@ -3,9 +3,15 @@
 #include "Gamepad.h"
 
 #define PORTA_PINS (0xF<<2)
+#define PLAYER_A_TURN ( (~GPIO_PORTA_DATA_R) & 1<<2 )
+#define PLAYER_A_FIRE ( (~GPIO_PORTA_DATA_R) & 1<<3 )
+#define PLAYER_B_TURN ( (~GPIO_PORTA_DATA_R) & 1<<4 )
+#define PLAYER_B_FIRE ( (~GPIO_PORTA_DATA_R) & 1<<5 )
 
-button_state player_a_fire_state = released;
-button_state player_b_fire_state = released;
+button_state player_a_fire_state;
+button_state player_b_fire_state;
+button_state player_a_turn_state;
+button_state player_b_turn_state;
 
 // Port A: 2,3,4,5
 void gamepad_init(void) {
@@ -23,6 +29,7 @@ void gamepad_init(void) {
 
     GPIO_PORTA_DEN_R |= PORTA_PINS; // enable
 
+    gamepad_reset_state();
 
 }
 
@@ -55,5 +62,40 @@ void gamepad_update(void) {
             player_b_fire_state = released;
         }
     }
+
+    if (PLAYER_A_TURN) {
+        if (player_a_turn_state==released) {
+            player_a_turn_state = pressing;
+        } else {
+            player_a_turn_state = pressed;
+        }
+    } else {
+        if (player_a_turn_state==pressed) {
+            player_a_turn_state = releasing;
+        } else {
+            player_a_turn_state = released;
+        }
+    }
+    
+    if (PLAYER_B_TURN) {
+        if (player_b_turn_state==released) {
+            player_b_turn_state = pressing;
+        } else {
+            player_b_turn_state = pressed;
+        }
+    } else {
+        if (player_b_turn_state==pressed) {
+            player_b_turn_state = releasing;
+        } else {
+            player_b_turn_state = released;
+        }
+    }
+}
+
+void gamepad_reset_state(void) {
+    player_a_fire_state = released;
+    player_b_fire_state = released;
+    player_a_turn_state = released;
+    player_b_turn_state = released;
 }
 

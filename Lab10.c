@@ -193,7 +193,14 @@ uint32_t start;
 uint32_t stop;
 uint32_t delay;
 
-
+typedef enum game_state_t {
+  GAME_START,
+  ROUND_START,
+  PLAYER_A_WINS_ROUND,  
+  PLAYER_B_WINS_ROUND,  
+  PLAYER_A_WINS_GAME,  
+  PLAYER_B_WINS_GAME,  
+} GameState;
 
 int
 main(void)
@@ -203,6 +210,8 @@ main(void)
   RCA_init();
   EnableInterrupts(); // enable all interrupts
   gamepad_init();		
+
+  GameState state = GAME_START;
 
   /*
 1. Program the value in the STRELOAD register.
@@ -260,7 +269,6 @@ main(void)
 
     rca_busy_flag = 1;
     frame_count = (frame_count + 1) % DIVISOR;
-
     start = STCURRENT;
 
     gamepad_update();
@@ -364,7 +372,7 @@ main(void)
         }
       }
 
-      if (PLAYER_A_TURN) {
+      if (player_a_turn_state==pressed) {
         shipA.angle = (shipA.angle - SHIP_TURN_SPEED) % 360;
       }
 
@@ -402,7 +410,7 @@ main(void)
         }
       }
 
-      if (PLAYER_B_TURN) {
+      if (player_b_turn_state==pressed) {
         shipB.angle = (shipB.angle - SHIP_TURN_SPEED) % 360;
       }
 
