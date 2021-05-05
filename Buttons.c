@@ -30,10 +30,10 @@ void Button_Init(void){volatile long delay;
 
 void GPIOPortF_Handler(void){
 	if ((GPIO_PORTF_RIS_R & 0x01)==0x01){ //PF0
-		playsound(Fire);
+		playsound(Hit);
 	}
 	if ((GPIO_PORTF_RIS_R & 0x10)==0x10){ //PF4
-		playsound(Rocket);
+		playsound(Shoot);
 	}	
   GPIO_PORTF_ICR_R = 0x11;      // acknowledge flag4
 }
