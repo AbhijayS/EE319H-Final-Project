@@ -27,6 +27,7 @@
 #include "Images.h"
 #include "Gamepad.h"
 #include "Sound.h"
+#include "Pot.h"
 
 #define PB54                  (*((volatile uint32_t *)0x400050C0)) // bits 5-4
 #define PF321                 (*((volatile uint32_t *)0x40025038)) // bits 3-1
@@ -197,6 +198,7 @@ main(void)
   EnableInterrupts(); // enable all interrupts
   gamepad_init();
   sound_init();
+	pot_init();
 
   GameState state = GAME_START;
 

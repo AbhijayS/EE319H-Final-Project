@@ -49,16 +49,12 @@ void RCA_init(void) {
 	NVIC_EN0_R |= 1<<19;
 	NVIC_PRI4_R &= 0x1FFFFFFF; // clear priority
 	NVIC_PRI4_R |= 0x20000000; // set priority to 1
-	// Timer B Module 0 is bit 20 (104) NVIC
-	// enable NVIC interrupts
-	NVIC_EN0_R |= 1<<20;
-	NVIC_PRI5_R &= ~(0x7<<5); // clear priority
-	NVIC_PRI5_R |= 0x2<<5; // set priority to 2
+
 	
 	// initialize general purpose timers to produce accurate signals
 	// 80Mhz system clock Periodic mode 15,750Hz freq (63.55us period) 7.4% duty cycle
 	// To use a GPTM, the appropriate TIMERn bit must be set in the RCGCTIMER or RCGCWTIMER register (see page 338 and page 357).
-	SYSCTL_RCGCTIMER_R |= 11; // provide clock to GPTM0 and 1
+	SYSCTL_RCGCTIMER_R |= 1; // provide clock to GPTM0
 	// wait a few cycles
 	__asm__{
 		NOP
@@ -66,7 +62,6 @@ void RCA_init(void) {
 		NOP
 		NOP
 	};
-
 
 	// GPTM0 Timer A - Horizontal low pulse
 	// 1. Ensure the timer is disabled (the TnEN bit is cleared) before making any changes.
@@ -86,29 +81,8 @@ void RCA_init(void) {
 	TIMER0_IMR_R |= 1; // enable timeout interrupts
 	TIMER0_IMR_R |= 1<<4; // enable match interrupts
 
-
-
-	// GPTM0 Timer B - Display Timer
-	// 1. Ensure the timer is disabled (the TnEN bit is cleared) before making any changes.
-	TIMER0_CTL_R &= ~(1<<8);
-	// 2. Write the GPTM Configuration (GPTMCFG) register with a value of 0x0000.0000.
-	TIMER0_CFG_R = 0x4; // configure 16-bit mode
-	// 3. Configure the TnMR field in the GPTM Timer n Mode Register (GPTMTnMR)
-	TIMER0_TBMR_R = (TIMER0_TBMR_R & ~3) | 2; // write 0x2 in bits 1:0 for periodic mode
-	//TIMER0_TBMR_R |= 1<<5; // enable match interrupts
-	// 4. Optionally configure the TnSNAPS, TnWOT, TnMTE, and TnCDIR bits in the GPTMTnMR register
-	// to select whether to capture the value of the free-running timer at time-out, use an external
-	// trigger to start counting, configure an additional trigger or interrupt, and count up or down.
-	TIMER0_TBMR_R |= 1<<6; // wait for Timer A trigger
-	// 5. Load the start value into the GPTM Timer n Interval Load Register (GPTMTnILR).
-	TIMER0_TBILR_R = 1200; // 15us display window offset
-	//TIMER0_TBMATCHR_R = 1880; // 40us display window
-	// 6. If interrupts are required, set the appropriate bits in the GPTM Interrupt Mask Register (GPTMIMR).
-	TIMER0_IMR_R |= 1<<8; // enable timeout interrupts
-	//TIMER0_IMR_R |= 1<<11; // enable match interrupts
-	
 	TIMER0_CTL_R |= 1; // enable timer a
-	
+
 }
 
 void Timer0A_Handler(void) {
