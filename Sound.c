@@ -4,7 +4,7 @@
 #define PORTB_PINS (0x0F)
 
 static int sound_index = -1;
-// volatile uint8_t volume = 0;
+volatile uint8_t volume = 0;
 
 void sound_init(void) {
     /* port b for sound config */
@@ -39,8 +39,7 @@ void sound_update(void) {
         return;
     }
 
-    // GPIO_PORTB_DATA_R = volume*shoot_sound[sound_index];
-    GPIO_PORTB_DATA_R = shoot_sound[sound_index];
+    GPIO_PORTB_DATA_R = volume*shoot_sound[sound_index];
     sound_index++;
 }
 

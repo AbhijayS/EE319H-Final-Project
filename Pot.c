@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "inc/tm4c123gh6pm.h"
 #include "Pot.h"
+#include "Sound.h"
 
 // ADC initialization function 
 // Input: sac sets hardware averaging
@@ -18,24 +19,48 @@ void ADC_Init(uint32_t sac){
   GPIO_PORTD_AMSEL_R |= 0x04;     // 5) enable analog fun on PE4
   SYSCTL_RCGCADC_R |= 0x01;       // 6) activate ADC0
 		
+		
 	__asm__{
-		NOP;
-		NOP;
-		NOP;
-		NOP;
-		NOP;
-		NOP;
-		NOP;
-		NOP;
-		NOP;
-		NOP;
-		NOP;
-		NOP;
-	}
-	
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+		NOP
+	};	
 
 	ADC0_PC_R = 0x01;               // 7) configure for 125K 
-	ADC0_SSPRI_R = 0x0123;          // 8) Seq 3 is highest priority
+	ADC0_SSPRI_R = 0xFFFF;          // 8) Seq 3 is highest priority
 	ADC0_ACTSS_R &= ~0x0008;        // 9) disable sample sequencer 3
 	ADC0_EMUX_R &= ~0xF000;         // 10) seq3 is software trigger
 	ADC0_SSMUX3_R = (ADC0_SSMUX3_R&0xFFFFFFF0)+5;  // 11) Ain9 (PE4)
@@ -62,7 +87,7 @@ uint32_t ADC_In(void){
 
 void pot_init(void) {
 
-	//ADC_Init(0);
+	ADC_Init(0);
 
 	// Timer B Module 0 is bit 20 (104) NVIC
 	// enable NVIC interrupts
@@ -104,8 +129,6 @@ void pot_init(void) {
 	
 }
 
-int volume = 0;
-
 void Timer0B_Handler(void) {
 	__asm__{
 		NOP
@@ -114,6 +137,6 @@ void Timer0B_Handler(void) {
 		NOP
 	};
 	
-	// volume = ADC_In();
+	volume = ADC_In()/2048;
 }
 
