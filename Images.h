@@ -24,6 +24,19 @@ extern const uint8_t ZERO[FONT_HEIGHT][FONT_WIDTH_COMPRESSED];
 
 extern const uint8_t NUMS[4][FONT_HEIGHT][FONT_WIDTH_COMPRESSED];
 
+#define LOGO_HEIGHT 8
+#define LOGO_WIDTH 76
+#define LOGO_WIDTH_COMPRESSED 19
+extern const uint8_t LOGO[LOGO_HEIGHT][LOGO_WIDTH_COMPRESSED];
+
+#define ENG_HEIGHT 8
+#define ENG_WIDTH_COMPRESSED 10
+extern const uint8_t ENG[ENG_HEIGHT][ENG_WIDTH_COMPRESSED];
+
+#define FRE_HEIGHT 8
+#define FRE_WIDTH_COMPRESSED 8
+extern const uint8_t FRE[FRE_HEIGHT][FRE_WIDTH_COMPRESSED];
+
 /*
 static const uint8_t MAP[][25] = {
 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 

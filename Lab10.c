@@ -175,18 +175,17 @@ typedef enum game_state_t {
   GAME_OVER,
 } GameState;
 
-void show_score(uint8_t a, uint8_t b) {
-  for (int i = 0; i < FONT_HEIGHT; i++) {
-    for (int j = 0; j < FONT_WIDTH_COMPRESSED; j++) {
-      write_4_pixels_to_map(NUMS[a][i][j], 3 + (j*4), 200+i);
+void draw_compressed_image(uint16_t width, uint16_t height, const uint8_t buffer[][width], uint16_t x, uint16_t y) {
+  for (int i = 0; i < height; i++) {
+    for (int j = 0; j < width; j++) {
+      write_4_pixels_to_map(buffer[i][j], x + (j*4), y + i);
     }
   }
+}
 
-  for (int i = 0; i < FONT_HEIGHT; i++) {
-    for (int j = 0; j < FONT_WIDTH_COMPRESSED; j++) {
-      write_4_pixels_to_map(NUMS[b][i][j], 312 + (j*4), 200+i);
-    }
-  }
+void show_score(uint8_t a, uint8_t b) {
+  draw_compressed_image(FONT_WIDTH_COMPRESSED, FONT_HEIGHT, NUMS[a], 3, 200);
+  draw_compressed_image(FONT_WIDTH_COMPRESSED, FONT_HEIGHT, NUMS[b], 312, 200);
 }
 
 int
@@ -194,10 +193,10 @@ main(void)
 {
   DisableInterrupts();
   PLL_Init();
-  RCA_init();
-  gamepad_init();
-  sound_init();
+	sound_init();
+	gamepad_init();
 	pot_init();
+  RCA_init();
 	EnableInterrupts(); // enable all interrupts
 
   GameState state = GAME_START;
@@ -241,9 +240,9 @@ main(void)
   };
   
   uint8_t frame_count = 0; // counts the number of frames displayed
-
   int player_a_score = 0;
   int player_b_score = 0;
+  int lang = 0; // 0 eng, 1 fre
 
   while(1)
   {
@@ -256,10 +255,31 @@ main(void)
     switch (state)
     {
     case GAME_START:      
+      gamepad_update();
       frame_count = 0;
       player_a_score = 0;
       player_b_score = 0;
-      state = ROUND_START;
+      // draw logo
+      draw_compressed_image(LOGO_WIDTH_COMPRESSED, LOGO_HEIGHT, LOGO, 122, 60);
+      // draw english
+      draw_compressed_image(ENG_WIDTH_COMPRESSED, ENG_HEIGHT, ENG, 30, 133);
+      // draw french
+      draw_compressed_image(FRE_WIDTH_COMPRESSED, FRE_HEIGHT, FRE, 255, 133);
+      // language check
+      if (player_b_turn_state==pressing) lang = 1;
+      if (player_b_fire_state==pressing) lang = 0;
+      if (lang) {
+        // underline fre
+        write_4_pixels_to_map(0xFF, 255, 133+FRE_HEIGHT+1);
+        // remove underline eng
+        write_4_pixels_to_map(0x55, 30, 133 + ENG_HEIGHT + 1);
+      }
+      else {
+        // underline eng
+        write_4_pixels_to_map(0xFF, 30, 133 + ENG_HEIGHT + 1);
+        // remove underline fre
+        write_4_pixels_to_map(0x55, 255, 133+FRE_HEIGHT+1);
+      }
       break;
 
     case IN_PROGRESS: {
@@ -356,12 +376,11 @@ main(void)
       /* player A */
       if (frame_count == 0)
       {
+        uint8_t sprite_buf[SPRITE_HEIGHT][SPRITE_WIDTH_COMPRESSED];
+        clear_sprite_buffer(sprite_buf);
+
         /* remove old ship from map */
-        for (int i = 0; i < SPRITE_HEIGHT; i++) {
-          for (int j = 0; j < SPRITE_WIDTH; j++) {
-            write_pixel_to_map(BLACK, shipA.x + j, shipA.y + i);
-          }
-        }
+        draw_compressed_image(SPRITE_WIDTH_COMPRESSED, SPRITE_HEIGHT, sprite_buf, shipA.x, shipA.y);
 
         if (player_a_turn_state==pressed) {
           shipA.angle = (shipA.angle - SHIP_TURN_SPEED) % 360;
@@ -379,27 +398,20 @@ main(void)
         shipA.x += mx;
         shipA.y += my;
         
-        uint8_t sprite_buf[SPRITE_HEIGHT][SPRITE_WIDTH_COMPRESSED];
-        clear_sprite_buffer(sprite_buf);
         rotate_pixel_buffer(shipA.base_image, sprite_buf, shipA.angle, 8, 7, 7);
 
         /* display ship on map */
-        for (int i = 0; i < SPRITE_HEIGHT; i++) {
-          for (int j = 0; j < SPRITE_WIDTH_COMPRESSED; j++) {
-            write_4_pixels_to_map(sprite_buf[i][j], shipA.x + (j*4), shipA.y + i);
-          }
-        }
+        draw_compressed_image(SPRITE_WIDTH_COMPRESSED, SPRITE_HEIGHT, sprite_buf, shipA.x, shipA.y);
       }
 
       /* player B */
       else if (frame_count == 1)
       {
+        uint8_t sprite_buf[SPRITE_HEIGHT][SPRITE_WIDTH_COMPRESSED];
+        clear_sprite_buffer(sprite_buf);
+        
         /* remove old ship from map */
-        for (int i = 0; i < SPRITE_HEIGHT; i++) {
-          for (int j = 0; j < SPRITE_WIDTH; j++) {
-            write_pixel_to_map(BLACK, shipB.x + j, shipB.y + i);
-          }
-        }
+        draw_compressed_image(SPRITE_WIDTH_COMPRESSED, SPRITE_HEIGHT, sprite_buf, shipB.x, shipB.y);
 
         if (player_b_turn_state==pressed) {
           shipB.angle = (shipB.angle - SHIP_TURN_SPEED) % 360;
@@ -417,16 +429,10 @@ main(void)
         shipB.x += mx;
         shipB.y += my;
         
-        uint8_t sprite_buf[SPRITE_HEIGHT][SPRITE_WIDTH_COMPRESSED];
-        clear_sprite_buffer(sprite_buf);
         rotate_pixel_buffer(shipB.base_image, sprite_buf, shipB.angle, 8, 7, 7);
 
         /* display ship on map */
-        for (int i = 0; i < SPRITE_HEIGHT; i++) {
-          for (int j = 0; j < SPRITE_WIDTH_COMPRESSED; j++) {
-            write_4_pixels_to_map(sprite_buf[i][j], shipB.x + (j*4), shipB.y + i);
-          }
-        }
+        draw_compressed_image(SPRITE_WIDTH_COMPRESSED, SPRITE_HEIGHT, sprite_buf, shipB.x, shipB.y);
       }
 
       stop = STCURRENT;

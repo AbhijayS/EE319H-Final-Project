@@ -10,36 +10,38 @@
 void ADC_Init(uint32_t sac){
 	// port D clock
 	SYSCTL_RCGCGPIO_R |= 8;
-	
-	__asm__{
-		NOP
-		NOP
-		NOP
-		NOP
-		NOP
-		NOP
-		NOP
-		NOP
-		NOP
-	};
-
 	while((SYSCTL_PRGPIO_R&0x0008) == 0){};// ready?
 	
 	GPIO_PORTD_DIR_R &= ~0x04;      // 2) make PD2 input
-	GPIO_PORTD_AFSEL_R |= 0x04;     // 3) enable alternate fun on PE4
-	GPIO_PORTD_DEN_R &= ~0x04;      // 4) disable digital I/O on PE4
-	GPIO_PORTD_AMSEL_R |= 0x04;     // 5) enable analog fun on PE4
-	SYSCTL_RCGCADC_R |= 0x01;       // 6) activate ADC0
+  GPIO_PORTD_AFSEL_R |= 0x04;     // 3) enable alternate fun on PE4
+  GPIO_PORTD_DEN_R &= ~0x04;      // 4) disable digital I/O on PE4
+  GPIO_PORTD_AMSEL_R |= 0x04;     // 5) enable analog fun on PE4
+  SYSCTL_RCGCADC_R |= 0x01;       // 6) activate ADC0
+		
+	__asm__{
+		NOP;
+		NOP;
+		NOP;
+		NOP;
+		NOP;
+		NOP;
+		NOP;
+		NOP;
+		NOP;
+		NOP;
+		NOP;
+		NOP;
+	}
 	
 
 	ADC0_PC_R = 0x01;               // 7) configure for 125K 
-	ADC0_SSPRI_R = 0xFFFF;          // 8) Seq 3 is highest priority
+	ADC0_SSPRI_R = 0x0123;          // 8) Seq 3 is highest priority
 	ADC0_ACTSS_R &= ~0x0008;        // 9) disable sample sequencer 3
 	ADC0_EMUX_R &= ~0xF000;         // 10) seq3 is software trigger
 	ADC0_SSMUX3_R = (ADC0_SSMUX3_R&0xFFFFFFF0)+5;  // 11) Ain9 (PE4)
 	ADC0_SSCTL3_R = 0x0006;         // 12) no TS0 D0, yes IE0 END0
 	ADC0_IM_R &= ~0x0008;           // 13) disable SS3 interrupts
-  	ADC0_ACTSS_R |= 0x0008;         // 14) enable sample sequencer 3
+  ADC0_ACTSS_R |= 0x0008;         // 14) enable sample sequencer 3
 	ADC0_SAC_R = sac;
 }
 
@@ -60,7 +62,7 @@ uint32_t ADC_In(void){
 
 void pot_init(void) {
 
-	// ADC_Init(0);
+	//ADC_Init(0);
 
 	// Timer B Module 0 is bit 20 (104) NVIC
 	// enable NVIC interrupts
