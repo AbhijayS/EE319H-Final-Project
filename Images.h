@@ -9,10 +9,20 @@
 
 /* Map */
 #define WIDTH 320
-#define HEIGHT 200
+#define HEIGHT 210
 #define COMPRESSION 4
-extern uint8_t MAP[][WIDTH/COMPRESSION];
+extern uint8_t MAP[HEIGHT][WIDTH/COMPRESSION];
 
+#define FONT_HEIGHT 10
+#define FONT_WIDTH 8
+#define FONT_WIDTH_COMPRESSED 2
+
+extern const uint8_t ONE[FONT_HEIGHT][FONT_WIDTH_COMPRESSED];
+extern const uint8_t TWO[FONT_HEIGHT][FONT_WIDTH_COMPRESSED];
+extern const uint8_t THREE[FONT_HEIGHT][FONT_WIDTH_COMPRESSED];
+extern const uint8_t ZERO[FONT_HEIGHT][FONT_WIDTH_COMPRESSED];
+
+extern const uint8_t NUMS[4][FONT_HEIGHT][FONT_WIDTH_COMPRESSED];
 
 /*
 static const uint8_t MAP[][25] = {

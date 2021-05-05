@@ -138,38 +138,6 @@ uint8_t collision(Sprite *sprite, direction dir, uint8_t speed) {
   return 0;
 }
 
-// uint8_t collision_bullet(Bullet *bullet, direction dir) {
-//   switch (dir)
-//   {
-//   case up:
-//     for (int i = 0; i < bullet->width; i++) {
-//       if (read_pixel_from_map(bullet->x+i, bullet->y-1)==WHITE) return 1;
-//     }
-//     return 0;
-
-//   case down:
-//     for (int i = 0; i < bullet->width; i++) {
-//       if (read_pixel_from_map(bullet->x+i, bullet->y+bullet->height)==WHITE) return 1;
-//     }
-//     return 0;
-
-//   case left:
-//     for (int i = 0; i < bullet->height; i++) {
-//       if (read_pixel_from_map(bullet->x-1, bullet->y+i)==WHITE) return 1;
-//     }
-//     return 0;
-  
-//   case right:
-//     for (int i = 0; i < bullet->height; i++) {
-//       if (read_pixel_from_map(bullet->x+bullet->width, bullet->y+i)==WHITE) return 1;
-//     }
-//     return 0;
-    
-//   default:
-//     return 0;
-//   }
-// }
-
 int bullet_collision(Bullet *bullet) {
   for (int i = -1; i < bullet->height+1; i++) {
     for (int j = -1; j < bullet->width+1; j++) {
@@ -194,13 +162,30 @@ uint32_t stop;
 uint32_t delay;
 
 typedef enum game_state_t {
+  START_SCREEN,
   GAME_START,
   ROUND_START,
+  IN_PROGRESS,
   PLAYER_A_WINS_ROUND,  
   PLAYER_B_WINS_ROUND,  
   PLAYER_A_WINS_GAME,  
   PLAYER_B_WINS_GAME,  
+  GAME_OVER,
 } GameState;
+
+void show_score(uint8_t a, uint8_t b) {
+  for (int i = 0; i < FONT_HEIGHT; i++) {
+    for (int j = 0; j < FONT_WIDTH_COMPRESSED; j++) {
+      write_4_pixels_to_map(NUMS[a][i][j], 3 + (j*4), 200+i);
+    }
+  }
+
+  for (int i = 0; i < FONT_HEIGHT; i++) {
+    for (int j = 0; j < FONT_WIDTH_COMPRESSED; j++) {
+      write_4_pixels_to_map(NUMS[b][i][j], 312 + (j*4), 200+i);
+    }
+  }
+}
 
 int
 main(void)
@@ -271,174 +256,274 @@ main(void)
     frame_count = (frame_count + 1) % DIVISOR;
     start = STCURRENT;
 
-    gamepad_update();
+    switch (state)
+    {
+    case GAME_START:      
+      frame_count = 0;
+      player_a_score = 0;
+      player_b_score = 0;
+      state = ROUND_START;
+      break;
 
-    if (player_a_fire_state==pressing && !bulletA.active) {
-      bulletA.x = shipA.x + 8 + (int)roundf(6*cosf(RADIANS(shipA.angle+90)));
-      bulletA.y = shipA.y + 7 + -1*(int)roundf(6*sinf(RADIANS(shipA.angle+90)));
-      bulletA.dx = (int)roundf(BULLET_SPEED*cosf(RADIANS(shipA.angle+90)));
-      bulletA.dy = -1*(int)roundf(BULLET_SPEED*sinf(RADIANS(shipA.angle+90)));
-      bulletA.active = 1;
-    }
+    case IN_PROGRESS: {
+      gamepad_update();
 
-    if (player_b_fire_state==pressing && !bulletB.active) {
-      bulletB.x = shipB.x + 8 + (int)roundf(6*cosf(RADIANS(shipB.angle+90)));
-      bulletB.y = shipB.y + 7 + -1*(int)roundf(6*sinf(RADIANS(shipB.angle+90)));
-      bulletB.dx = (int)roundf(BULLET_SPEED*cosf(RADIANS(shipB.angle+90)));
-      bulletB.dy = -1*(int)roundf(BULLET_SPEED*sinf(RADIANS(shipB.angle+90)));
-      bulletB.active = 1;
-    }
-
-    /* bulletA stuff */
-    if (bulletA.active) {
-      /* erase bullet from map */
-      for (int i = 0; i < bulletA.height; i++) {
-        for (int j = 0; j < bulletA.width; j++) {
-          write_pixel_to_map(BLACK, bulletA.x+j, bulletA.y+i);
-        }
+      if (player_a_fire_state==pressing && !bulletA.active) {
+        bulletA.x = shipA.x + 8 + (int)roundf(6*cosf(RADIANS(shipA.angle+90)));
+        bulletA.y = shipA.y + 7 + -1*(int)roundf(6*sinf(RADIANS(shipA.angle+90)));
+        bulletA.dx = (int)roundf(BULLET_SPEED*cosf(RADIANS(shipA.angle+90)));
+        bulletA.dy = -1*(int)roundf(BULLET_SPEED*sinf(RADIANS(shipA.angle+90)));
+        bulletA.active = 1;
       }
 
-      // increment bullet
-      bulletA.x+=bulletA.dx;
-      bulletA.y+=bulletA.dy;
-
-      // collision
-      if (bullet_collision(&bulletA)) {
-        if (overlap(bulletA.x-1, bulletA.x+bulletA.width,
-                    bulletA.y-1, bulletA.y+bulletA.height,
-                    shipB.x, shipB.x+SPRITE_WIDTH-1,
-                    shipB.y, shipB.y+SPRITE_HEIGHT))
-                    {
-                      player_a_score++;
-                    }
-        bulletA.active = 0;
+      if (player_b_fire_state==pressing && !bulletB.active) {
+        bulletB.x = shipB.x + 8 + (int)roundf(6*cosf(RADIANS(shipB.angle+90)));
+        bulletB.y = shipB.y + 7 + -1*(int)roundf(6*sinf(RADIANS(shipB.angle+90)));
+        bulletB.dx = (int)roundf(BULLET_SPEED*cosf(RADIANS(shipB.angle+90)));
+        bulletB.dy = -1*(int)roundf(BULLET_SPEED*sinf(RADIANS(shipB.angle+90)));
+        bulletB.active = 1;
       }
-      
-      // no collision
-      else {
-        /* redraw bullet */
+
+      /* bulletA stuff */
+      if (bulletA.active) {
+        /* erase bullet from map */
         for (int i = 0; i < bulletA.height; i++) {
           for (int j = 0; j < bulletA.width; j++) {
-            write_pixel_to_map(WHITE, bulletA.x+j, bulletA.y+i);
+            write_pixel_to_map(BLACK, bulletA.x+j, bulletA.y+i);
+          }
+        }
+
+        // increment bullet
+        bulletA.x+=bulletA.dx;
+        bulletA.y+=bulletA.dy;
+
+        // collision
+        if (bullet_collision(&bulletA)) {
+          if (overlap(bulletA.x-1, bulletA.x+bulletA.width,
+                      bulletA.y-1, bulletA.y+bulletA.height,
+                      shipB.x, shipB.x+SPRITE_WIDTH-1,
+                      shipB.y, shipB.y+SPRITE_HEIGHT))
+                      {
+                        state = PLAYER_A_WINS_ROUND;
+                      }
+          bulletA.active = 0;
+        }
+        // no collision
+        else {
+          /* redraw bullet */
+          for (int i = 0; i < bulletA.height; i++) {
+            for (int j = 0; j < bulletA.width; j++) {
+              write_pixel_to_map(WHITE, bulletA.x+j, bulletA.y+i);
+            }
           }
         }
       }
-    }
 
-    /* bulletB stuff */
-    if (bulletB.active) {
-      /* erase bullet from map */
-      for (int i = 0; i < bulletB.height; i++) {
-        for (int j = 0; j < bulletB.width; j++) {
-          write_pixel_to_map(BLACK, bulletB.x+j, bulletB.y+i);
-        }
-      }
-
-      // increment bullet
-      bulletB.x+=bulletB.dx;
-      bulletB.y+=bulletB.dy;
-
-      // collision
-      if (bullet_collision(&bulletB)) {
-        if (overlap(bulletB.x-1, bulletB.x+bulletB.width,
-                    bulletB.y-1, bulletB.y+bulletB.height,
-                    shipA.x, shipA.x+SPRITE_WIDTH-1,
-                    shipA.y, shipA.y+SPRITE_HEIGHT))
-                    {
-                      player_b_score++;
-                    }
-        bulletB.active = 0;
-      }
-      
-      // no collision
-      else {
-        /* redraw bullet */
+      /* bulletB stuff */
+      if (bulletB.active) {
+        /* erase bullet from map */
         for (int i = 0; i < bulletB.height; i++) {
           for (int j = 0; j < bulletB.width; j++) {
-            write_pixel_to_map(WHITE, bulletB.x+j, bulletB.y+i);
+            write_pixel_to_map(BLACK, bulletB.x+j, bulletB.y+i);
+          }
+        }
+
+        // increment bullet
+        bulletB.x+=bulletB.dx;
+        bulletB.y+=bulletB.dy;
+
+        // collision
+        if (bullet_collision(&bulletB)) {
+          if (overlap(bulletB.x-1, bulletB.x+bulletB.width,
+                      bulletB.y-1, bulletB.y+bulletB.height,
+                      shipA.x, shipA.x+SPRITE_WIDTH-1,
+                      shipA.y, shipA.y+SPRITE_HEIGHT))
+                      {
+                        state = PLAYER_B_WINS_ROUND;
+                      }
+          bulletB.active = 0;
+        }
+        // no collision
+        else {
+          /* redraw bullet */
+          for (int i = 0; i < bulletB.height; i++) {
+            for (int j = 0; j < bulletB.width; j++) {
+              write_pixel_to_map(WHITE, bulletB.x+j, bulletB.y+i);
+            }
           }
         }
       }
+
+      /* player A */
+      if (frame_count == 0)
+      {
+        /* remove old ship from map */
+        for (int i = 0; i < SPRITE_HEIGHT; i++) {
+          for (int j = 0; j < SPRITE_WIDTH; j++) {
+            write_pixel_to_map(BLACK, shipA.x + j, shipA.y + i);
+          }
+        }
+
+        if (player_a_turn_state==pressed) {
+          shipA.angle = (shipA.angle - SHIP_TURN_SPEED) % 360;
+        }
+
+        int mx = (int)roundf(SHIP_SPEED*cosf(RADIANS(shipA.angle+90)));
+        int my = -1*(int)roundf(SHIP_SPEED*sinf(RADIANS(shipA.angle+90)));
+
+        if (mx > 0 && collision(&shipA, right, SHIP_SPEED)) mx = 0;
+        else if (mx < 0 && collision(&shipA, left, SHIP_SPEED)) mx = 0;
+
+        if (my > 0 && collision(&shipA, down, SHIP_SPEED)) my = 0;
+        else if (my < 0 && collision(&shipA, up, SHIP_SPEED)) my = 0;
+
+        shipA.x += mx;
+        shipA.y += my;
+        
+        uint8_t sprite_buf[SPRITE_HEIGHT][SPRITE_WIDTH_COMPRESSED];
+        clear_sprite_buffer(sprite_buf);
+        rotate_pixel_buffer(shipA.base_image, sprite_buf, shipA.angle, 8, 7, 7);
+
+        /* display ship on map */
+        for (int i = 0; i < SPRITE_HEIGHT; i++) {
+          for (int j = 0; j < SPRITE_WIDTH_COMPRESSED; j++) {
+            write_4_pixels_to_map(sprite_buf[i][j], shipA.x + (j*4), shipA.y + i);
+          }
+        }
+      }
+
+      /* player B */
+      else if (frame_count == 1)
+      {
+        /* remove old ship from map */
+        for (int i = 0; i < SPRITE_HEIGHT; i++) {
+          for (int j = 0; j < SPRITE_WIDTH; j++) {
+            write_pixel_to_map(BLACK, shipB.x + j, shipB.y + i);
+          }
+        }
+
+        if (player_b_turn_state==pressed) {
+          shipB.angle = (shipB.angle - SHIP_TURN_SPEED) % 360;
+        }
+
+        int mx = (int)roundf(SHIP_SPEED*cosf(RADIANS(shipB.angle+90)));
+        int my = -1*(int)roundf(SHIP_SPEED*sinf(RADIANS(shipB.angle+90)));
+
+        if (mx > 0 && collision(&shipB, right, SHIP_SPEED)) mx = 0;
+        else if (mx < 0 && collision(&shipB, left, SHIP_SPEED)) mx = 0;
+
+        if (my > 0 && collision(&shipB, down, SHIP_SPEED)) my = 0;
+        else if (my < 0 && collision(&shipB, up, SHIP_SPEED)) my = 0;
+
+        shipB.x += mx;
+        shipB.y += my;
+        
+        uint8_t sprite_buf[SPRITE_HEIGHT][SPRITE_WIDTH_COMPRESSED];
+        clear_sprite_buffer(sprite_buf);
+        rotate_pixel_buffer(shipB.base_image, sprite_buf, shipB.angle, 8, 7, 7);
+
+        /* display ship on map */
+        for (int i = 0; i < SPRITE_HEIGHT; i++) {
+          for (int j = 0; j < SPRITE_WIDTH_COMPRESSED; j++) {
+            write_4_pixels_to_map(sprite_buf[i][j], shipB.x + (j*4), shipB.y + i);
+          }
+        }
+      }
+
+      stop = STCURRENT;
+      delay = start-stop;
+      break;
+    }
+    
+    case PLAYER_A_WINS_ROUND: {
+      // animation / pause
+      player_a_score++;
+      show_score(player_a_score, player_b_score);
+      state = ROUND_START;
+      break;
+    }
+    
+    case PLAYER_B_WINS_ROUND: {
+      // animation / pause
+      player_b_score++;
+      show_score(player_a_score, player_b_score);
+      state = ROUND_START;
+      break;
     }
 
-    /* player A */
-    if (frame_count == 0)
-    {
+    case ROUND_START: {
+      /* erase bulletA from map */
+      if (bulletA.active) {
+        for (int i = 0; i < bulletA.height; i++) {
+          for (int j = 0; j < bulletA.width; j++) {
+            write_pixel_to_map(BLACK, bulletA.x+j, bulletA.y+i);
+          }
+        }
+      }
 
-      /* remove old ship from map */
+      /* erase bullet from map */
+      if (bulletB.active) {
+        for (int i = 0; i < bulletB.height; i++) {
+          for (int j = 0; j < bulletB.width; j++) {
+            write_pixel_to_map(BLACK, bulletB.x+j, bulletB.y+i);
+          }
+        }
+      }
+
+      /* remove shipA from map */
       for (int i = 0; i < SPRITE_HEIGHT; i++) {
         for (int j = 0; j < SPRITE_WIDTH; j++) {
           write_pixel_to_map(BLACK, shipA.x + j, shipA.y + i);
         }
       }
 
-      if (player_a_turn_state==pressed) {
-        shipA.angle = (shipA.angle - SHIP_TURN_SPEED) % 360;
-      }
-
-      int mx = (int)roundf(SHIP_SPEED*cosf(RADIANS(shipA.angle+90)));
-      int my = -1*(int)roundf(SHIP_SPEED*sinf(RADIANS(shipA.angle+90)));
-
-      if (mx > 0 && collision(&shipA, right, SHIP_SPEED)) mx = 0;
-      else if (mx < 0 && collision(&shipA, left, SHIP_SPEED)) mx = 0;
-
-      if (my > 0 && collision(&shipA, down, SHIP_SPEED)) my = 0;
-      else if (my < 0 && collision(&shipA, up, SHIP_SPEED)) my = 0;
-
-      shipA.x += mx;
-      shipA.y += my;
-      
-      uint8_t sprite_buf[SPRITE_HEIGHT][SPRITE_WIDTH_COMPRESSED];
-      clear_sprite_buffer(sprite_buf);
-      rotate_pixel_buffer(shipA.base_image, sprite_buf, shipA.angle, 8, 7, 7);
-
-      /* display ship on map */
-      for (int i = 0; i < SPRITE_HEIGHT; i++) {
-        for (int j = 0; j < SPRITE_WIDTH_COMPRESSED; j++) {
-          write_4_pixels_to_map(sprite_buf[i][j], shipA.x + (j*4), shipA.y + i);
-        }
-      }
-    }
-
-    /* player B */
-    else if (frame_count == 1)
-    {
-      /* remove old ship from map */
+      /* remove shipB from map */
       for (int i = 0; i < SPRITE_HEIGHT; i++) {
         for (int j = 0; j < SPRITE_WIDTH; j++) {
           write_pixel_to_map(BLACK, shipB.x + j, shipB.y + i);
         }
       }
 
-      if (player_b_turn_state==pressed) {
-        shipB.angle = (shipB.angle - SHIP_TURN_SPEED) % 360;
-      }
+      shipA = (Sprite) {
+        .x = 75,
+        .y = 160,
+        .angle = 0,
+        .base_image = SHIP_SPRITE
+      };
 
-      int mx = (int)roundf(SHIP_SPEED*cosf(RADIANS(shipB.angle+90)));
-      int my = -1*(int)roundf(SHIP_SPEED*sinf(RADIANS(shipB.angle+90)));
+      bulletA.x = 80;
+      bulletA.y = 20;
+      bulletA.active = 0;
+      bulletA.dx = 0;
+      bulletA.dy = 0;
 
-      if (mx > 0 && collision(&shipB, right, SHIP_SPEED)) mx = 0;
-      else if (mx < 0 && collision(&shipB, left, SHIP_SPEED)) mx = 0;
+      shipB = (Sprite) {
+        .x = 240,
+        .y = 40,
+        .angle = 180,
+        .base_image = SHIPB_SPRITE
+      };
 
-      if (my > 0 && collision(&shipB, down, SHIP_SPEED)) my = 0;
-      else if (my < 0 && collision(&shipB, up, SHIP_SPEED)) my = 0;
+      bulletB.x = 80;
+      bulletB.y = 20;
+      bulletB.active = 0;
+      bulletB.dx = 0;
+      bulletB.dy = 0;
 
-      shipB.x += mx;
-      shipB.y += my;
-      
-      uint8_t sprite_buf[SPRITE_HEIGHT][SPRITE_WIDTH_COMPRESSED];
-      clear_sprite_buffer(sprite_buf);
-      rotate_pixel_buffer(shipB.base_image, sprite_buf, shipB.angle, 8, 7, 7);
-
-      /* display ship on map */
-      for (int i = 0; i < SPRITE_HEIGHT; i++) {
-        for (int j = 0; j < SPRITE_WIDTH_COMPRESSED; j++) {
-          write_4_pixels_to_map(sprite_buf[i][j], shipB.x + (j*4), shipB.y + i);
-        }
-      }
+      show_score(player_a_score, player_b_score);
+      if (player_a_score==3 || player_b_score==3) state = GAME_OVER;
+      else state = IN_PROGRESS;
+      break;
     }
 
-    stop = STCURRENT;
-    delay = start-stop;
+    case GAME_OVER:
+      state = GAME_START;
+      break;
+    
+    default:
+      break;
+    }
+
   }
 }
+
