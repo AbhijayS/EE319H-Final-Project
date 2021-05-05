@@ -2,6 +2,7 @@
 #include "RCA.h"
 #include "inc/tm4c123gh6pm.h"
 #include "Images.h"
+#include "Sound.h"
 
 #define LINES 262
 #define VSYNC_LINE 248
@@ -130,6 +131,7 @@ void Timer0A_Handler(void) {
 		} else if (line == LAST_LINE+1) {
 			rca_busy_flag = 0;
 		}
+		sound_update();
 	}
 	// match event
 	else {

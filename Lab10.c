@@ -26,6 +26,7 @@
 #include "RCA.h"
 #include "Images.h"
 #include "Gamepad.h"
+#include "Sound.h"
 
 #define PB54                  (*((volatile uint32_t *)0x400050C0)) // bits 5-4
 #define PF321                 (*((volatile uint32_t *)0x40025038)) // bits 3-1
@@ -194,16 +195,10 @@ main(void)
   PLL_Init();
   RCA_init();
   EnableInterrupts(); // enable all interrupts
-  gamepad_init();		
+  gamepad_init();
+  sound_init();
 
   GameState state = GAME_START;
-
-  /*
-1. Program the value in the STRELOAD register.
-2. Clear the STCURRENT register by writing to it with any value.
-3. Configure the STCTRL register for the required operation.
-
-  */
 
   STRELOAD = ~0;
   STCURRENT = 0;
@@ -274,6 +269,7 @@ main(void)
         bulletA.dx = (int)roundf(BULLET_SPEED*cosf(RADIANS(shipA.angle+90)));
         bulletA.dy = -1*(int)roundf(BULLET_SPEED*sinf(RADIANS(shipA.angle+90)));
         bulletA.active = 1;
+        sound_start();
       }
 
       if (player_b_fire_state==pressing && !bulletB.active) {
@@ -282,6 +278,7 @@ main(void)
         bulletB.dx = (int)roundf(BULLET_SPEED*cosf(RADIANS(shipB.angle+90)));
         bulletB.dy = -1*(int)roundf(BULLET_SPEED*sinf(RADIANS(shipB.angle+90)));
         bulletB.active = 1;
+        sound_start();
       }
 
       /* bulletA stuff */
