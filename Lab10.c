@@ -195,10 +195,10 @@ main(void)
   DisableInterrupts();
   PLL_Init();
   RCA_init();
-  EnableInterrupts(); // enable all interrupts
   gamepad_init();
   sound_init();
 	pot_init();
+	EnableInterrupts(); // enable all interrupts
 
   GameState state = GAME_START;
 

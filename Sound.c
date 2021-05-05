@@ -4,17 +4,18 @@
 #define PORTB_PINS (0x0F)
 
 static int sound_index = -1;
+// volatile uint8_t volume = 0;
 
 void sound_init(void) {
     /* port b for sound config */
 	SYSCTL_RCGCGPIO_R |= 1<<1; // clock to port b
-    __asm__{
-        NOP
-        NOP
-    };    
-    GPIO_PORTB_DIR_R |= PORTB_PINS; // output
+	__asm__{
+		NOP
+		NOP
+	};
+  GPIO_PORTB_DIR_R |= PORTB_PINS; // output
 	GPIO_PORTB_DR8R_R |= PORTB_PINS; // select 8mA drive
-    GPIO_PORTB_DEN_R |= PORTB_PINS; // enable
+  GPIO_PORTB_DEN_R |= PORTB_PINS; // enable
 }
 
 void sound_start(void) {
@@ -38,6 +39,7 @@ void sound_update(void) {
         return;
     }
 
+    // GPIO_PORTB_DATA_R = volume*shoot_sound[sound_index];
     GPIO_PORTB_DATA_R = shoot_sound[sound_index];
     sound_index++;
 }
