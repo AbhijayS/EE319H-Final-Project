@@ -188,6 +188,14 @@ void show_score(uint8_t a, uint8_t b) {
   draw_compressed_image(FONT_WIDTH_COMPRESSED, FONT_HEIGHT, NUMS[b], 312, 200);
 }
 
+void clear_image_from_map(uint16_t width, uint16_t height, uint16_t x, uint16_t y) {
+  for (int i = 0; i < height; i++) {
+    for (int j = 0; j < width; j++) {
+      write_pixel_to_map(BLACK, x + j, y + i);
+    }
+  }
+}
+
 int
 main(void)
 {
@@ -240,7 +248,7 @@ main(void)
   };
   
   uint8_t frame_count = 0; // counts the number of frames displayed
-  int player_a_score = 0;
+  int player_a_score = 1;
   int player_b_score = 0;
   int lang = 0; // 0 eng, 1 fre
 
@@ -254,7 +262,7 @@ main(void)
 
     switch (state)
     {
-    case GAME_START:      
+    case GAME_START: {
       gamepad_update();
       frame_count = 0;
       player_a_score = 0;
@@ -272,15 +280,31 @@ main(void)
         // underline fre
         write_4_pixels_to_map(0xFF, 255, 133+FRE_HEIGHT+1);
         // remove underline eng
-        write_4_pixels_to_map(0x55, 30, 133 + ENG_HEIGHT + 1);
+        write_4_pixels_to_map(0x55, 30, 133+ENG_HEIGHT+1);
       }
       else {
         // underline eng
-        write_4_pixels_to_map(0xFF, 30, 133 + ENG_HEIGHT + 1);
+        write_4_pixels_to_map(0xFF, 30, 133+ENG_HEIGHT+1);
         // remove underline fre
         write_4_pixels_to_map(0x55, 255, 133+FRE_HEIGHT+1);
       }
+
+      /* start game */
+      if (player_a_fire_state==releasing) {
+        // erase logo
+        clear_image_from_map(LOGO_WIDTH, LOGO_HEIGHT, 122, 60);
+        // erase eng
+        clear_image_from_map(ENG_WIDTH, ENG_HEIGHT, 30, 133);
+        // erase fre
+        clear_image_from_map(FRE_WIDTH, FRE_HEIGHT, 255, 133);
+        // remove underline eng
+        write_4_pixels_to_map(0x55, 30, 133+ENG_HEIGHT+1);
+        // remove underline fre
+        write_4_pixels_to_map(0x55, 255, 133+FRE_HEIGHT+1);
+        state = ROUND_START;
+      }
       break;
+    }
 
     case IN_PROGRESS: {
       gamepad_update();
@@ -518,12 +542,31 @@ main(void)
       show_score(player_a_score, player_b_score);
       if (player_a_score==3 || player_b_score==3) state = GAME_OVER;
       else state = IN_PROGRESS;
+      
       break;
     }
 
-    case GAME_OVER:
-      state = GAME_START;
+    case GAME_OVER: {
+      gamepad_update();
+      // player a
+      if (player_a_score > player_b_score) draw_compressed_image(SPRITE_WIDTH_COMPRESSED, SPRITE_HEIGHT, SHIP_SPRITE, 132, 133);
+      // player b
+      else draw_compressed_image(SPRITE_WIDTH_COMPRESSED, SPRITE_HEIGHT, SHIPB_SPRITE, 132, 133);
+      // eng
+      if (lang==0) draw_compressed_image(WON_WIDTH_COMPRESSED, WON_HEIGHT, WON, 156, 137);
+      // fre
+      else draw_compressed_image(GAG_WIDTH_COMPRESSED, GAG_HEIGHT, GAG, 156, 135);
+      // restart
+      if (player_a_fire_state==releasing) {
+        // erase ship
+        clear_image_from_map(SPRITE_WIDTH, SPRITE_HEIGHT, 132, 133);
+        // erase text
+        clear_image_from_map(WON_WIDTH, WON_HEIGHT, 156, 137);
+        clear_image_from_map(GAG_WIDTH, GAG_HEIGHT, 156, 135);
+        state = GAME_START;
+      }
       break;
+    }
     
     default:
       break;
