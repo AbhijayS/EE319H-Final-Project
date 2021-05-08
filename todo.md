@@ -31,13 +31,13 @@
     - ~~set sprite starting location on base map~~
 1. ~~Add second sprite and all 4 buttons~~
 1. ~~Add shooting~~
-1. Keep track of game score
-    - reset position after every kill
-1. Play to first 3 kills then reset game
-1. Sound driver
-1. Two languages
-    - English
-    - French
+1. ~~Keep track of game score~~
+    - ~~reset position after every kill~~
+1. ~~Play to first 3 kills then reset game~~
+1. ~~Sound driver~~
+1. ~~Two languages~~
+    - ~~English~~
+    - ~~French~~
 
 ## Advanced Requirements
 - Resolve copyright stuff
