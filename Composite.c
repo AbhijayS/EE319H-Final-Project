@@ -6,7 +6,7 @@
 void composite_video_init()
 {
 	// enable Port E clock
-	ti_gpio_enable_clock(PORTE);
+	ti_gpio_enable_clock(&SYSCTL_RCGCGPIO_R, PORTE);
 
 	// configure PE1 and PE2 as outputs
 	ti_gpio_set_pin_direction(&GPIO_PORTE_DIR_R, PIN1, PIN_OUT);
