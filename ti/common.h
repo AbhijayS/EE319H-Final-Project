@@ -2,6 +2,9 @@
 #ifndef __TI_COMMON_H__
 #define __TI_COMMON_H__
 
+#include <stdint.h>
+
+// Port definitions
 #define PORTA 1
 #define PORTB 2
 #define PORTC 4
@@ -9,6 +12,7 @@
 #define PORTE 16
 #define PORTF 32
 
+// Port pin definitions
 #define PIN0 1
 #define PIN1 2
 #define PIN2 4
@@ -18,6 +22,7 @@
 #define PIN6 64
 #define PIN7 128
 
+// Pin direction definitions
 #define PIN_IN 0
 #define PIN_OUT 1
 
@@ -30,15 +35,16 @@
 inline void
 ti_gpio_enable_clock(volatile uint32_t *gpio_clock_register, uint8_t port)
 {
+	// enable port clock
 	*gpio_clock_register |= port;
-	// wait a few
-	__asm__ {
+
+	// wait a few clock cycles
+	__asm__{
 		NOP
 		NOP
 		NOP
 		NOP
-	}
-	;
+	};
 }
 
 /*
@@ -93,7 +99,5 @@ ti_nvic_configure(
 	// apply the new priority level (pg 152)
 	*nvic_priority_register |= (priority_level << 5) << ((interrupt_number % 4) * 8);
 }
-
-
 
 #endif
